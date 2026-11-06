@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Unprompted Pro 跨領域口語表達訓練系統</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #0b0f19;
+      color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .chip-active {
+      background-color: #4f46e5 !important;
+      color: #ffffff !important;
+      border-color: #818cf8 !important;
+      box-shadow: 0 0 14px rgba(79, 70, 229, 0.45);
+    }
+    .angle-active {
+      background-color: rgba(79, 70, 229, 0.25) !important;
+      color: #a5b4fc !important;
+      border-color: #6366f1 !important;
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col max-w-md mx-auto pb-20">
+
+  <!-- 頂部狀態列 -->
+  <header class="sticky top-0 z-30 bg-[#0b0f19]/90 backdrop-blur-md px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <span class="text-xl">🎙️</span>
+      <div>
+        <h1 class="text-sm font-bold tracking-wide bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
+          UNPROMPTED PRO
+        </h1>
+        <p class="text-[10px] text-slate-400">全領域即時知識 × 口語表達系統</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <span id="streak-badge" class="text-[11px] bg-slate-800 text-amber-400 px-2.5 py-1 rounded-full border border-slate-700 font-medium">
+        🔥 累計 0 練
+      </span>
+    </div>
+  </header>
+
+  <!-- ==================== 頁面 1：訓練大廳 ==================== -->
+  <main id="tab-practice" class="flex-1 p-4 space-y-5">
+
+    <!-- 設定區 (計時啟動後自動收合) -->
+    <div id="setup-container" class="space-y-4">
+
+      <!-- 1. 領域分類快篩 + 15 大生活與專業領域 -->
+      <section class="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-bold text-slate-300">1. 選擇知識領域（即時聯網抓題）</label>
+          <span id="current-domain-label" class="text-[11px] text-indigo-400 font-medium">🎲 全領域隨機</span>
+        </div>
+
+        <!-- 領域大類篩選器 -->
+        <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+          <button onclick="filterDomainGroup('all')" id="grp-all" class="grp-btn text-[11px] px-2.5 py-1 rounded-lg bg-slate-800 text-white border border-slate-600 shrink-0">🌟 全部</button>
+          <button onclick="filterDomainGroup('tech')" id="grp-tech" class="grp-btn text-[11px] px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 border border-slate-800 shrink-0">🔬 科技與科學</button>
+          <button onclick="filterDomainGroup('life')" id="grp-life" class="grp-btn text-[11px] px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 border border-slate-800 shrink-0">☕ 商業、健康與生活</button>
+          <button onclick="filterDomainGroup('humanities')" id="grp-humanities" class="grp-btn text-[11px] px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 border border-slate-800 shrink-0">🎭 人文、藝術與社會</button>
+        </div>
+
+        <!-- 領域按鈕網格 -->
+        <div id="domain-grid" class="grid grid-cols-3 gap-2 max-h-44 overflow-y-auto pr-0.5"></div>
+
+        <!-- 自訂領域關鍵字輸入框 -->
+        <div id="custom-keyword-box" class="hidden pt-1 flex gap-2">
+          <input id="custom-keyword-input" type="text" placeholder="輸入任何想練的主題（如：半導體、馬拉松、建築美學）" class="flex-1 bg-slate-950 text-xs text-white px-3 py-2 rounded-xl border border-slate-700 focus:outline-none focus:border-indigo-500">
+          <button onclick="fetchNewTopic()" class="bg-indigo-600 text-white text-xs px-3 py-2 rounded-xl font-bold shrink-0">抓取</button>
+        </div>
+      </section>
+
+      <!-- 2. 四大訓練模式 -->
+      <section class="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800 space-y-2.5">
+        <label class="text-xs font-bold text-slate-300 block">2. 選擇表達訓練模式（準備時間最短 5 分鐘）</label>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="selectMode('quick', 5, 1)" id="mode-quick" class="mode-btn chip-active p-2.5 rounded-xl bg-slate-800/70 border border-slate-700 text-left transition">
+            <div class="text-xs font-bold">⚡ 快速構思</div>
+            <div class="text-[10px] text-slate-300 opacity-80">5分鐘準備 / 1分鐘演講</div>
+          </button>
+          <button onclick="selectMode('prep', 5, 2)" id="mode-prep" class="mode-btn p-2.5 rounded-xl bg-slate-800/70 border border-slate-700 text-left transition">
+            <div class="text-xs font-bold">🧩 PREP 結構</div>
+            <div class="text-[10px] text-slate-300 opacity-80">5分鐘準備 / 2分鐘演講</div>
+          </button>
+          <button onclick="selectMode('feynman', 10, 3)" id="mode-feynman" class="mode-btn p-2.5 rounded-xl bg-slate-800/70 border border-slate-700 text-left transition">
+            <div class="text-xs font-bold">👨‍🏫 費曼白話教學</div>
+            <div class="text-[10px] text-slate-300 opacity-80">10分鐘準備 / 3分鐘演講</div>
+          </button>
+          <button onclick="selectMode('deep', 15, 5)" id="mode-deep" class="mode-btn p-2.5 rounded-xl bg-slate-800/70 border border-slate-700 text-left transition">
+            <div class="text-xs font-bold">🔍 深度論述</div>
+            <div class="text-[10px] text-slate-300 opacity-80">15分鐘準備 / 5分鐘演講</div>
+          </button>
+        </div>
+
+        <!-- 準備時間與演講時間微調 (皆以分鐘為單位，準備最短 5 分鐘) -->
+        <div class="grid grid-cols-2 gap-2.5 pt-1">
+          <div class="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800">
+            <label class="text-[11px] text-slate-400 block mb-1">⏳ 準備時間 (最短 5 分鐘)</label>
+            <select id="prep-min-select" class="w-full bg-slate-900 text-white text-xs rounded-lg p-2 border border-slate-700 focus:outline-none">
+              <option value="5" selected>5 分鐘</option>
+              <option value="10">10 分鐘</option>
+              <option value="15">15 分鐘</option>
+              <option value="20">20 分鐘</option>
+              <option value="30">30 分鐘</option>
+            </select>
+          </div>
+          <div class="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800">
+            <label class="text-[11px] text-slate-400 block mb-1">🎯 演講限時 (分鐘)</label>
+            <select id="speak-min-select" class="w-full bg-slate-900 text-white text-xs rounded-lg p-2 border border-slate-700 focus:outline-none">
+              <option value="1" selected>1 分鐘 (精華短講)</option>
+              <option value="2">2 分鐘 (標準表達)</option>
+              <option value="3">3 分鐘 (完整論述)</option>
+              <option value="5">5 分鐘 (深度演講)</option>
+              <option value="10">10 分鐘 (專題簡報)</option>
+            </select>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- 3. 即時題目與三種切入視角卡片 -->
+    <section class="bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950/50 p-4 rounded-2xl border border-slate-700/80 shadow-xl space-y-3">
+      <div class="flex items-center justify-between gap-2">
+        <span id="topic-tag" class="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+          🎲 點擊右方按鈕抓取網路新題
+        </span>
+        <button onclick="fetchNewTopic()" id="fetch-btn" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-xl font-semibold transition flex items-center gap-1 shrink-0">
+          🔄 聯網換題
+        </button>
+      </div>
+
+      <!-- 三種題目切入視角切換 -->
+      <div class="grid grid-cols-3 gap-1.5 pt-1">
+        <button onclick="switchAngle('feynman')" id="angle-feynman" class="angle-btn angle-active text-[11px] py-1.5 px-2 rounded-lg bg-slate-800/80 border border-slate-700 font-medium">
+          👨‍🏫 費曼白話題
+        </button>
+        <button onclick="switchAngle('critical')" id="angle-critical" class="angle-btn text-[11px] py-1.5 px-2 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-400 font-medium">
+          💡 觀點思辨題
+        </button>
+        <button onclick="switchAngle('practical')" id="angle-practical" class="angle-btn text-[11px] py-1.5 px-2 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-400 font-medium">
+          🚀 實務應用題
+        </button>
+      </div>
+
+      <!-- 題目主文 -->
+      <div class="py-2">
+        <h2 id="question-display" class="text-base font-bold leading-relaxed text-white">
+          正在從網路知識庫為您準備跨領域題目...
+        </h2>
+      </div>
+
+      <!-- 偷看背景知識摘要 -->
+      <div class="border-t border-slate-800 pt-2.5">
+        <button onclick="toggleWikiExtract()" class="text-xs text-cyan-400 hover:text-cyan-300 flex items-center justify-between w-full">
+          <span>📖 偷看背景知識小抄與關鍵字</span>
+          <span id="extract-arrow">▼</span>
+        </button>
+        <div id="wiki-extract-box" class="hidden mt-2 text-xs text-slate-300 bg-slate-950/80 p-3 rounded-xl border border-slate-800 leading-relaxed space-y-2">
+          <p id="wiki-extract-text">載入中...</p>
+          <a id="wiki-link" href="#" target="_blank" class="inline-block text-[11px] text-indigo-400 underline">前往維基百科閱讀完整條目 ↗</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. 雙階段計時器與提詞筆記面板 -->
+    <section id="active-session-panel" class="hidden flex-col space-y-4 bg-slate-900/95 p-4 rounded-2xl border border-slate-700">
+      <div class="flex items-center justify-between">
+        <span id="phase-badge" class="text-xs font-bold px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+          ⏳ 準備構思階段
+        </span>
+        <button onclick="skipToSpeak()" id="skip-prep-btn" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 rounded-lg font-bold transition">
+          ⚡ 準備完成，提前開講
+        </button>
+      </div>
+
+      <!-- 倒數大數字與進度條 -->
+      <div class="text-center py-2">
+        <div id="timer-number" class="text-6xl font-extrabold font-mono tracking-tight text-white">05:00</div>
+        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden mt-3">
+          <div id="timer-bar" class="bg-amber-400 h-full transition-all duration-1000" style="width: 100%"></div>
+        </div>
+      </div>
+
+      <!-- 動態結構錨點提示 -->
+      <div id="structure-guide" class="text-xs bg-slate-950/90 p-3 rounded-xl border border-slate-800 space-y-1">
+        <div class="font-bold text-indigo-400 mb-1">🧭 PREP 結構導航提示：</div>
+        <div id="step-1" class="text-slate-300">1. <b>Point (結論)</b>：前 20% 時間，直接給出你的核心定見</div>
+        <div id="step-2" class="text-slate-400">2. <b>Reason (原因)</b>：拆解 2 個支撐你結論的關鍵理由</div>
+        <div id="step-3" class="text-slate-400">3. <b>Example (案例/比喻)</b>：舉一個生活化比喻或親身故事</div>
+        <div id="step-4" class="text-slate-400">4. <b>Point (重申)</b>：最後 15 秒，總結金句收尾</div>
+      </div>
+
+      <!-- 同步錄音狀態與回放 -->
+      <div class="flex items-center justify-between bg-slate-950/70 px-3 py-2 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-2">
+          <span id="mic-dot" class="w-2.5 h-2.5 rounded-full bg-slate-600"></span>
+          <span id="mic-status" class="text-xs text-slate-300">演講開始時可啟動麥克風錄音</span>
+        </div>
+        <button onclick="toggleRecording()" id="rec-toggle-btn" class="text-xs bg-slate-800 hover:bg-slate-700 text-white px-2.5 py-1 rounded-lg border border-slate-700">
+          🎙️ 手動錄音
+        </button>
+      </div>
+      <audio id="audio-playback" controls class="hidden w-full h-10"></audio>
+    </section>
+
+    <!-- 5. 講稿骨架隨手筆記 / 提詞區 (隨時可寫，自動儲存至後端/本地) -->
+    <section class="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800 space-y-2">
+      <div class="flex items-center justify-between">
+        <label class="text-xs font-bold text-slate-300">📝 講稿骨架筆記 & 演講提詞卡</label>
+        <button onclick="insertTemplate()" class="text-[11px] text-indigo-400 hover:text-indigo-300 bg-indigo-950/60 px-2.5 py-1 rounded-lg border border-indigo-800/50">
+          ＋ 插入結構模板
+        </button>
+      </div>
+      <textarea id="outline-notes" rows="4" placeholder="在 5~30 分鐘準備時間內，在這裡列出你的破題金句、3 個重點與生活比喻...（練習結束後會自動存入紀錄庫）" class="w-full bg-slate-950 text-xs text-slate-100 p-3 rounded-xl border border-slate-800 focus:outline-none focus:border-indigo-500 leading-relaxed"></textarea>
+
+      <!-- 後端 AI 講評與示範講稿按鈕 -->
+      <div class="flex gap-2 pt-1">
+        <button onclick="requestAICoach()" id="ai-coach-btn" class="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-600 to-cyan-600 text-white shadow-md">
+          🤖 呼叫後端 AI 批改筆記 & 生成滿分示範講稿
+        </button>
+        <button onclick="saveCurrentPractice()" class="py-2.5 px-3 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 shrink-0">
+          💾 存入紀錄庫
+        </button>
+      </div>
+
+      <!-- AI 教練回饋顯示區 -->
+      <div id="ai-feedback-box" class="hidden mt-2 bg-indigo-950/40 border border-indigo-800/60 rounded-xl p-3 text-xs text-slate-200 space-y-2 leading-relaxed"></div>
+    </section>
+
+    <!-- 主控制按鈕 -->
+    <div class="pt-1">
+      <button id="start-btn" onclick="startTraining()" class="w-full py-4 rounded-2xl font-bold text-base bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30 transition">
+        🚀 開始準備倒數（進入訓練）
+      </button>
+      <button id="reset-btn" onclick="stopAndSaveTraining()" class="hidden w-full py-4 rounded-2xl font-bold text-base bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/30 transition">
+        ⏹ 結束本次練習並儲存紀錄
+      </button>
+    </div>
+
+  </main>
+
+  <!-- ==================== 頁面 2：雲端與歷史練習紀錄庫 ==================== -->
+  <main id="tab-history" class="hidden flex-1 p-4 space-y-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-base font-bold text-white">📚 練習歷史與複盤紀錄庫</h2>
+        <p class="text-xs text-slate-400">自動保存你的跨領域題目、講稿大綱與 AI 講評</p>
+      </div>
+      <button onclick="exportRecords()" class="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-xl font-bold">
+        📤 匯出 / 傳至雲端硬碟
+      </button>
+    </div>
+    <div id="history-list" class="space-y-3"></div>
+  </main>
+
+  <!-- ==================== 頁面 3：後端 API 與雲端資料庫設定 ==================== -->
+  <main id="tab-settings" class="hidden flex-1 p-4 space-y-4">
+    <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-3">
+      <h2 class="text-base font-bold text-white">⚙️ 後端伺服器與雲端同步設定</h2>
+      <p class="text-xs text-slate-400 leading-relaxed">
+        本系統預設會自動呼叫同網域下的後端路徑 <code class="text-indigo-400">/api/coach</code>。你也可以綁定 Google 試算表 Webhook，讓每次練習自動寫入你的 Google 雲端硬碟！
+      </p>
+
+      <div class="space-y-1.5 pt-2">
+        <label class="text-xs font-bold text-slate-300">1. Google 雲端硬碟試算表 Webhook URL（選填）</label>
+        <input id="webhook-url-input" type="url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-950 text-xs text-white p-2.5 rounded-xl border border-slate-700">
+        <p class="text-[11px] text-slate-500">填入後，每次點擊「存入紀錄庫」都會同步把題目與講稿寫入你的 Google Sheet。</p>
+      </div>
+
+      <div class="space-y-1.5 pt-2">
+        <label class="text-xs font-bold text-slate-300">2. 備用 Gemini API Key（若未部署後端時前端直連用，選填）</label>
+        <input id="client-api-key-input" type="password" placeholder="AIzaSy..." class="w-full bg-slate-950 text-xs text-white p-2.5 rounded-xl border border-slate-700">
+      </div>
+
+      <button onclick="saveSettings()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl mt-2">
+        💾 儲存設定
+      </button>
+    </div>
+  </main>
+
+  <!-- 底部固定導覽列 (正式 App 多頁面切換) -->
+  <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0b0f19]/95 backdrop-blur-md border-t border-slate-800 grid grid-cols-3 py-2 px-4 z-40">
+    <button onclick="switchTab('practice')" id="nav-practice" class="flex flex-col items-center text-indigo-400 font-bold text-xs py-1">
+      <span class="text-lg">🎙️</span>
+      <span>訓練大廳</span>
+    </button>
+    <button onclick="switchTab('history')" id="nav-history" class="flex flex-col items-center text-slate-400 text-xs py-1">
+      <span class="text-lg">📚</span>
+      <span>歷史紀錄庫</span>
+    </button>
+    <button onclick="switchTab('settings')" id="nav-settings" class="flex flex-col items-center text-slate-400 text-xs py-1">
+      <span class="text-lg">⚙️</span>
+      <span>後端與雲端</span>
+    </button>
+  </nav>
+
+  <script>
+    // ==================== 15 大生活與專業領域定義 ====================
+    const DOMAINS = [
+      { id: 'random', name: '🎲 全領域隨機', group: 'all', keywords: [] },
+      { id: 'cs', name: '💻 計算機與AI', group: 'tech', keywords: ['人工智慧', '演算法', '雲端運算', '資安', '區塊鏈', '作業系統', '軟體工程', '機器學習', '資料庫'] },
+      { id: 'psy', name: '🧠 心理與認知', group: 'humanities', keywords: ['認知偏誤', '發展心理學', '情緒勒索', '心流理論', '潛意識', '依附理論', '拖延症', '習得性無助', '多巴胺'] },
+      { id: 'biz', name: '📈 商業與理財', group: 'life', keywords: ['機會成本', '複利效應', '沉沒成本', '商業模式', '通貨膨脹', '品牌定位', '長尾理論', '藍海策略', '被動收入'] },
+      { id: 'health', name: '🏃 健康與運動', group: 'life', keywords: ['基礎代謝率', '間歇性斷食', '超負荷原則', '睡眠週期', '腸道菌群', '有氧運動', '肌肥大', '抗氧化劑', '心率區間'] },
+      { id: 'science', name: '🌌 自然科學與太空', group: 'tech', keywords: ['熱力學第二定律', '黑洞', '量子糾纏', '演化論', '光合作用', '相對論', '溫室效應', 'DNA複製', '板塊構造'] },
+      { id: 'food', name: '🍳 美食科學與品味', group: 'life', keywords: ['梅納反應', '發酵', '精品咖啡', '分子料理', '乳化作用', '鮮味', '低溫烹調', '烘焙科學'] },
+      { id: 'comm', name: '🗣️ 溝通與人際', group: 'humanities', keywords: ['非暴力溝通', '同理心', '破窗效應', '社會認同', '談判技巧', '肢體語言', '首因效應', '積極傾聽'] },
+      { id: 'art', name: '🎨 藝術設計與建築', group: 'humanities', keywords: ['極簡主義', '黃金比例', '包浩斯', '色彩心理學', '留白', '哥德式建築', '印象派', '使用者體驗設計'] },
+      { id: 'pop', name: '🎬 影視動漫與流行', group: 'life', keywords: ['英雄旅程', '打破第四面牆', '蒙太奇', '賽博龐克', '迷因文化', '串流媒體', '世界觀設定'] },
+      { id: 'history', name: '🏺 歷史與人類學', group: 'humanities', keywords: ['工業革命', '絲綢之路', '文藝復興', '農業革命', '大航海時代', '文化衝擊', '都市化'] },
+      { id: 'society', name: '⚖️ 社會趨勢與倫理', group: 'humanities', keywords: ['少子化', '遠距工作', '演算法同溫層', '數位遊牧', '無條件基本收入', '高齡化社會', '電車難題'] },
+      { id: 'eco', name: '🌱 環境生態與地球', group: 'tech', keywords: ['碳中和', '生物多樣性', '循環經濟', '再生能源', '珊瑚白化', '極端氣候', '微塑膠'] },
+      { id: 'philo', name: '🦉 哲學與邏輯思辨', group: 'humanities', keywords: ['斯多葛主義', '存在主義', '奧卡姆剃刀', '蘇格拉底反詰法', '決定論', '功利主義', '忒修斯之船'] },
+      { id: 'custom', name: '🔍 自訂任意主題', group: 'all', keywords: [] }
+    ];
+
+    let selectedDomainId = 'random';
+    let currentFilterGroup = 'all';
+    let currentAngle = 'feynman';
+    let currentTopicData = {
+      domainName: '🎲 全領域隨機',
+      title: '梅納反應',
+      extract: '梅納反應是食物中的還原糖與胺基酸在加熱時發生的一系列複雜化學反應，能讓煎牛排、烤麵包與烘焙咖啡產生迷人的焦香與金黃色澤。',
+      url: 'https://zh.wikipedia.org/wiki/%E6%A2%85%E7%B4%8D%E5%8F%8D%E6%87%89',
+      questions: {
+        feynman: '請用「煎牛排或烤吐司」的生活畫面，向完全不懂化學的朋友解釋什麼是「梅納反應」？為什麼它讓食物變好吃？',
+        critical: '有人認為現代食品工業過度利用香味與口感反應來讓人上癮，你如何看待「美味科學」與「健康飲食」之間的平衡？',
+        practical: '知道了「溫度與水分會影響梅納反應」後，下次自己下廚或挑選料理時，你會如何應用這個原理？'
+      }
+    };
+
+    let timerInterval = null;
+    let currentPhase = 'idle';
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
+
+    // 初始化畫面
+    window.addEventListener('DOMContentLoaded', () => {
+      renderDomainGrid();
+      loadSettings();
+      renderHistory();
+      fetchNewTopic();
+    });
+
+    function filterDomainGroup(group) {
+      currentFilterGroup = group;
+      document.querySelectorAll('.grp-btn').forEach(btn => {
+        btn.className = 'grp-btn text-[11px] px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 border border-slate-800 shrink-0';
+      });
+      document.getElementById('grp-' + group).className = 'grp-btn text-[11px] px-2.5 py-1 rounded-lg bg-slate-800 text-white border border-slate-600 shrink-0';
+      renderDomainGrid();
+    }
+
+    function renderDomainGrid() {
+      const grid = document.getElementById('domain-grid');
+      grid.innerHTML = '';
+      const filtered = DOMAINS.filter(d => currentFilterGroup === 'all' || d.group === 'all' || d.group === currentFilterGroup);
+      filtered.forEach(d => {
+        const btn = document.createElement('button');
+        const activeClass = d.id === selectedDomainId ? 'chip-active' : '';
+        btn.className = `p-2 rounded-xl bg-slate-800/80 border border-slate-700 text-xs font-medium text-center truncate transition ${activeClass}`;
+        btn.innerText = d.name;
+        btn.onclick = () => selectDomain(d.id);
+        grid.appendChild(btn);
+      });
+    }
+
+    function selectDomain(id) {
+      selectedDomainId = id;
+      const found = DOMAINS.find(d => d.id === id);
+      document.getElementById('current-domain-label').innerText = found ? found.name : '';
+      renderDomainGrid();
+
+      const customBox = document.getElementById('custom-keyword-box');
+      if (id === 'custom') {
+        customBox.classList.remove('hidden');
+      } else {
+        customBox.classList.add('hidden');
+        fetchNewTopic();
+      }
+    }
+
+    function selectMode(modeId, prepMin, speakMin) {
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('chip-active'));
+      document.getElementById('mode-' + modeId).classList.add('chip-active');
+      document.getElementById('prep-min-select').value = prepMin;
+      document.getElementById('speak-min-select').value = speakMin;
+    }
+
+    // ==================== 聯網抓取 Wikipedia + 呼叫後端 AI 轉化題目 ====================
+    async function fetchNewTopic() {
+      const fetchBtn = document.getElementById('fetch-btn');
+      const qDisplay = document.getElementById('question-display');
+      fetchBtn.innerText = '⏳ 抓取中...';
+      fetchBtn.disabled = true;
+
+      try {
+        let actualDomain = DOMAINS.find(d => d.id === selectedDomainId);
+        let searchKeyword = '';
+
+        if (selectedDomainId === 'random') {
+          const pool = DOMAINS.filter(d => d.id !== 'random' && d.id !== 'custom');
+          actualDomain = pool[Math.floor(Math.random() * pool.length)];
+          searchKeyword = actualDomain.keywords[Math.floor(Math.random() * actualDomain.keywords.length)];
+        } else if (selectedDomainId === 'custom') {
+          const val = document.getElementById('custom-keyword-input').value.trim();
+          searchKeyword = val || '創新思維';
+        } else {
+          searchKeyword = actualDomain.keywords[Math.floor(Math.random() * actualDomain.keywords.length)];
+        }
+
+        // 1. 呼叫繁體中文 Wikipedia API 搜尋相關條目
+        const searchUrl = `https://zh.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(searchKeyword)}&utf8=&format=json&origin=*`;
+        const searchRes = await fetch(searchUrl);
+        const searchJson = await searchRes.json();
+        const results = searchJson?.query?.search || [];
+        const picked = results.length > 0 ? results[Math.floor(Math.random() * Math.min(8, results.length))] : { title: searchKeyword };
+
+        // 2. 取得該條目的完整摘要
+        const sumUrl = `https://zh.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(picked.title)}`;
+        const sumRes = await fetch(sumUrl);
+        const sumJson = await sumRes.json();
+
+        const title = sumJson.title || picked.title;
+        const extract = sumJson.extract || `關於「${title}」的核心概念探討與日常應用。`;
+        const pageUrl = sumJson?.content_urls?.desktop?.page || `https://zh.wikipedia.org/wiki/${encodeURIComponent(title)}`;
+
+        // 3. 優先嘗試呼叫我們的後端 Serverless API (/api/coach) 生成深度三視角題目
+        let questions = buildSmartQuestions(title, actualDomain.name, extract);
+        try {
+          const clientKey = localStorage.getItem('unprompted_api_key') || '';
+          const backendRes = await fetch('/api/coach', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'generate_questions',
+              title,
+              domain: actualDomain.name,
+              extract,
+              clientApiKey: clientKey
+            })
+          });
+          if (backendRes.ok) {
+            const backendData = await backendRes.json();
+            if (backendData.questions) questions = backendData.questions;
+          }
+        } catch (err) {
+          // 若尚未部署後端，自動使用內建智慧題型生成器
+        }
+
+        currentTopicData = {
+          domainName: selectedDomainId === 'random' ? `🎲 隨機抽中：${actualDomain.name}` : actualDomain.name,
+          title,
+          extract,
+          url: pageUrl,
+          questions
+        };
+
+        updateTopicUI();
+      } catch (e) {
+        qDisplay.innerText = '網路連線稍慢，已為您載入精選跨領域題目！';
+      } finally {
+        fetchBtn.innerText = '🔄 聯網換題';
+        fetchBtn.disabled = false;
+      }
+    }
+
+    function buildSmartQuestions(title, domainName, extract) {
+      return {
+        feynman: `【費曼降維挑戰】請向一位完全沒有「${domainName}」背景的朋友，用一個日常生活比喻解釋什麼是「${title}」？為什麼它很重要？`,
+        critical: `【觀點思辨挑戰】關於「${title}」，人們常有哪些誤解或盲點？請結合你的個人觀察，分享三個有說服力的核心觀點。`,
+        practical: `【實務應用挑戰】如果把「${title}」背後的核心原理，應用在你的日常工作、健康管理或人際溝通中，可以具體怎麼做？`
+      };
+    }
+
+    function updateTopicUI() {
+      document.getElementById('topic-tag').innerText = `${currentTopicData.domainName} ｜ 主題：${currentTopicData.title}`;
+      document.getElementById('question-display').innerText = currentTopicData.questions[currentAngle];
+      document.getElementById('wiki-extract-text').innerText = currentTopicData.extract;
+      document.getElementById('wiki-link').href = currentTopicData.url;
+      document.getElementById('ai-feedback-box').classList.add('hidden');
+    }
+
+    function switchAngle(angle) {
+      currentAngle = angle;
+      document.querySelectorAll('.angle-btn').forEach(b => {
+        b.className = 'angle-btn text-[11px] py-1.5 px-2 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-400 font-medium';
+      });
+      document.getElementById('angle-' + angle).className = 'angle-btn angle-active text-[11px] py-1.5 px-2 rounded-lg bg-slate-800/80 border border-slate-700 font-medium';
+      document.getElementById('question-display').innerText = currentTopicData.questions[currentAngle];
+    }
+
+    function toggleWikiExtract() {
+      const box = document.getElementById('wiki-extract-box');
+      box.classList.toggle('hidden');
+    }
+
+    function insertTemplate() {
+      const box = document.getElementById('outline-notes');
+      const tpl = `【P 結論破題】：關於「${currentTopicData.title}」，我最核心的看法是...\n【R 兩個原因】：第一、...；第二、...\n【E 生活比喻/案例】：這就像是我們日常生活中的...\n【P 金句收尾】：因此，掌握這個概念能幫我們...`;
+      box.value = box.value ? box.value + '\n\n' + tpl : tpl;
+    }
+
+    // ==================== 雙階段計時器 (準備最短 5 分鐘) ====================
+    function formatMMSS(sec) {
+      const m = Math.floor(sec / 60).toString().padStart(2, '0');
+      const s = (sec % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function startTraining() {
+      const prepMin = Math.max(5, parseInt(document.getElementById('prep-min-select').value, 10) || 5);
+      const speakMin = parseInt(document.getElementById('speak-min-select').value, 10) || 1;
+
+      document.getElementById('setup-container').classList.add('hidden');
+      document.getElementById('start-btn').classList.add('hidden');
+      document.getElementById('reset-btn').classList.remove('hidden');
+      const panel = document.getElementById('active-session-panel');
+      panel.classList.remove('hidden');
+      panel.classList.add('flex');
+
+      runCountdown('prep', prepMin * 60, () => {
+        startSpeakingPhase();
+      });
+    }
+
+    function skipToSpeak() {
+      startSpeakingPhase();
+    }
+
+    function startSpeakingPhase() {
+      const speakMin = parseInt(document.getElementById('speak-min-select').value, 10) || 1;
+      document.getElementById('skip-prep-btn').classList.add('hidden');
+      runCountdown('speak', speakMin * 60, () => {
+        finishTrainingSession();
+      });
+    }
+
+    function runCountdown(phase, totalSec, onDone) {
+      clearInterval(timerInterval);
+      currentPhase = phase;
+      let rem = totalSec;
+
+      const badge = document.getElementById('phase-badge');
+      const num = document.getElementById('timer-number');
+      const bar = document.getElementById('timer-bar');
+
+      if (phase === 'prep') {
+        badge.innerText = '⏳ 構思準備階段（請在下方整理講稿大綱）';
+        badge.className = 'text-xs font-bold px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40';
+        bar.className = 'bg-amber-400 h-full transition-all duration-1000';
+        document.getElementById('skip-prep-btn').classList.remove('hidden');
+      } else {
+        badge.innerText = '🎙️ 正式演講階段（請看著下方大綱開口表達！）';
+        badge.className = 'text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+        bar.className = 'bg-emerald-500 h-full transition-all duration-1000';
+      }
+
+      num.innerText = formatMMSS(rem);
+      bar.style.width = '100%';
+
+      timerInterval = setInterval(() => {
+        rem--;
+        num.innerText = formatMMSS(rem);
+        bar.style.width = Math.max(0, (rem / totalSec) * 100) + '%';
+
+        if (phase === 'speak' && rem <= 15 && rem > 0) {
+          badge.innerText = '🔥 最後 15 秒！請重申核心結論收尾';
+          badge.className = 'text-xs font-bold px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40';
+          bar.className = 'bg-rose-500 h-full transition-all duration-1000';
+        }
+
+        if (rem <= 0) {
+          clearInterval(timerInterval);
+          onDone();
+        }
+      }, 1000);
+    }
+
+    function finishTrainingSession() {
+      const badge = document.getElementById('phase-badge');
+      badge.innerText = '🎉 演講完成！紀錄已自動保存';
+      if (isRecording) toggleRecording();
+      saveCurrentPractice(true);
+    }
+
+    function stopAndSaveTraining() {
+      clearInterval(timerInterval);
+      if (isRecording) toggleRecording();
+      document.getElementById('setup-container').classList.remove('hidden');
+      document.getElementById('start-btn').classList.remove('hidden');
+      document.getElementById('reset-btn').classList.add('hidden');
+      document.getElementById('active-session-panel').classList.add('hidden');
+      document.getElementById('active-session-panel').classList.remove('flex');
+    }
+
+    // ==================== 同步錄音功能 ====================
+    async function toggleRecording() {
+      const btn = document.getElementById('rec-toggle-btn');
+      const dot = document.getElementById('mic-dot');
+      const status = document.getElementById('mic-status');
+      const audioEl = document.getElementById('audio-playback');
+
+      if (!isRecording) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+          mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+          mediaRecorder.onstop = () => {
+            const blob = new Blob(audioChunks, { type: 'audio/webm' });
+            audioEl.src = URL.createObjectURL(blob);
+            audioEl.classList.remove('hidden');
+          };
+          mediaRecorder.start();
+          isRecording = true;
+          btn.innerText = '⏹ 停止錄音';
+          dot.className = 'w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping';
+          status.innerText = '正在錄音中...';
+        } catch (err) {
+          alert('無法啟動麥克風，請確認瀏覽器已允許麥克風權限。');
+        }
+      } else {
+        mediaRecorder.stop();
+        isRecording = false;
+        btn.innerText = '🎙️ 重新錄音';
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400';
+        status.innerText = '錄音完成！可於下方播放檢視：';
+      }
+    }
+
+    // ==================== 呼叫後端 AI 教練批改與生成滿分講稿 ====================
+    async function requestAICoach() {
+      const btn = document.getElementById('ai-coach-btn');
+      const box = document.getElementById('ai-feedback-box');
+      const notes = document.getElementById('outline-notes').value.trim();
+
+      btn.innerText = '⏳ 後端 AI 教練正在分析並撰寫示範講稿...';
+      btn.disabled = true;
+      box.classList.remove('hidden');
+      box.innerHTML = '正在連線至後端伺服器 `/api/coach` 運算中...';
+
+      try {
+        const clientKey = localStorage.getItem('unprompted_api_key') || '';
+        const res = await fetch('/api/coach', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'evaluate_speech',
+            title: currentTopicData.title,
+            question: currentTopicData.questions[currentAngle],
+            extract: currentTopicData.extract,
+            notes,
+            clientApiKey: clientKey
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          box.innerHTML = `<div class="font-bold text-indigo-300 mb-1">✨ AI 教練專屬講評與示範：</div><div class="whitespace-pre-line">${data.feedback}</div>`;
+        } else {
+          throw new Error('Backend not configured');
+        }
+      } catch (e) {
+        // 本地智慧示範講稿 Fallback
+        box.innerHTML = `
+          <div class="font-bold text-cyan-300">💡 1 分鐘黃金結構示範講稿（PREP 框架）：</div>
+          <p><b>1. 【破題結論】</b>：今天想跟大家分享「${currentTopicData.title}」。簡單來說，它不僅是一個專業名詞，更是能幫我們看懂日常運作底層邏輯的關鍵工具。</p>
+          <p><b>2. 【核心原理解析】</b>：${currentTopicData.extract.slice(0, 90)}...</p>
+          <p><b>3. 【生活化比喻】</b>：如果用日常生活來比喻，這就像我們在調整運動配速或升級工作流程一樣——抓住最核心的觸發條件，就能用最小的力氣換取最大的成果。</p>
+          <p><b>4. 【有力收尾】</b>：下次在生活中遇到類似情境時，不妨試著用「${currentTopicData.title}」的視角重新拆解，你會發現問題變得清晰許多！</p>
+        `;
+      } finally {
+        btn.innerText = '🤖 呼叫後端 AI 批改筆記 & 生成滿分示範講稿';
+        btn.disabled = false;
+      }
+    }
+
+    // ==================== 雲端與本地資料庫儲存 ====================
+    async function saveCurrentPractice(silent = false) {
+      const notes = document.getElementById('outline-notes').value.trim();
+      const record = {
+        id: Date.now(),
+        date: new Date().toLocaleString('zh-TW'),
+        domain: currentTopicData.domainName,
+        title: currentTopicData.title,
+        question: currentTopicData.questions[currentAngle],
+        prepMin: document.getElementById('prep-min-select').value,
+        speakMin: document.getElementById('speak-min-select').value,
+        notes: notes || '（未填寫文字筆記）'
+      };
+
+      const history = JSON.parse(localStorage.getItem('unprompted_history') || '[]');
+      history.unshift(record);
+      localStorage.setItem('unprompted_history', JSON.stringify(history));
+      renderHistory();
+
+      // 若有設定 Google Sheet Webhook，同步推送至 Google 雲端硬碟
+      const webhookUrl = localStorage.getItem('unprompted_webhook');
+      if (webhookUrl) {
+        try {
+          fetch(webhookUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(record)
+          });
+        } catch (e) {}
+      }
+
+      if (!silent) alert('✅ 已存入歷史紀錄庫！');
+    }
+
+    function renderHistory() {
+      const history = JSON.parse(localStorage.getItem('unprompted_history') || '[]');
+      document.getElementById('streak-badge').innerText = `🔥 累計 ${history.length} 練`;
+      const list = document.getElementById('history-list');
+
+      if (history.length === 0) {
+        list.innerHTML = '<div class="text-center text-xs text-slate-500 py-10 bg-slate-900/50 rounded-2xl border border-slate-800">尚無練習紀錄，完成第一場訓練後將自動顯示於此！</div>';
+        return;
+      }
+
+      list.innerHTML = history.map(item => `
+        <div class="bg-slate-900 p-3.5 rounded-2xl border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between text-[11px] text-slate-400">
+            <span class="text-indigo-400 font-bold">${item.domain} · ${item.title}</span>
+            <span>${item.date}</span>
+          </div>
+          <div class="text-xs font-bold text-white">${item.question}</div>
+          <div class="text-xs text-slate-300 bg-slate-950 p-2.5 rounded-xl border border-slate-800 whitespace-pre-line">${item.notes}</div>
+        </div>
+      `).join('');
+    }
+
+    function exportRecords() {
+      const history = JSON.parse(localStorage.getItem('unprompted_history') || '[]');
+      if (history.length === 0) return alert('目前還沒有紀錄可匯出喔！');
+
+      let text = '# Unprompted Pro 口語表達練習紀錄\n\n';
+      history.forEach((h, i) => {
+        text += `## ${i + 1}. [${h.domain}] ${h.title} (${h.date})\n- **題目**：${h.question}\n- **設定**：準備 ${h.prepMin} 分鐘 / 演講 ${h.speakMin} 分鐘\n- **講稿筆記**：\n${h.notes}\n\n---\n\n`;
+      });
+
+      if (navigator.share) {
+        navigator.share({ title: '我的口語表達練習紀錄', text });
+      } else {
+        const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `speaking-records-${Date.now()}.md`;
+        a.click();
+      }
+    }
+
+    function loadSettings() {
+      document.getElementById('webhook-url-input').value = localStorage.getItem('unprompted_webhook') || '';
+      document.getElementById('client-api-key-input').value = localStorage.getItem('unprompted_api_key') || '';
+    }
+
+    function saveSettings() {
+      localStorage.setItem('unprompted_webhook', document.getElementById('webhook-url-input').value.trim());
+      localStorage.setItem('unprompted_api_key', document.getElementById('client-api-key-input').value.trim());
+      alert('✅ 設定已儲存！');
+    }
+
+    function switchTab(tab) {
+      ['practice', 'history', 'settings'].forEach(t => {
+        document.getElementById('tab-' + t).classList.add('hidden');
+        document.getElementById('nav-' + t).className = 'flex flex-col items-center text-slate-400 text-xs py-1';
+      });
+      document.getElementById('tab-' + tab).classList.remove('hidden');
+      document.getElementById('nav-' + tab).className = 'flex flex-col items-center text-indigo-400 font-bold text-xs py-1';
+    }
+  </script>
+</body>
+</html>
